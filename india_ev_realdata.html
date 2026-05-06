@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India EV Revolution — Live Real Data Dashboard 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Nunito:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron: #FF9933;
+    --navy: #06002E;
+    --card: #0a0520;
+    --border: #1e1045;
+    --accent: #FFCC44;
+    --text: #e8e0ff;
+    --muted: #7a6fa8;
+    --teal: #00DDAA;
+    --green2: #4ADE80;
+    --red: #F87171;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--navy); color:var(--text); font-family:'Nunito',sans-serif; overflow-x:hidden; }
+  body::after {
+    content:''; position:fixed; inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:999; opacity:0.35;
+  }
+  .tricolor { height:5px; background:linear-gradient(90deg,#FF9933 33.3%,#ffffff 33.3% 66.6%,#138808 66.6%); }
+
+  nav {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 60px; border-bottom:1px solid var(--border);
+    background:rgba(6,0,46,0.97); backdrop-filter:blur(12px);
+    position:sticky; top:0; z-index:100;
+  }
+  .logo { font-family:'Teko',sans-serif; font-size:22px; font-weight:700; letter-spacing:3px; color:var(--saffron); }
+  .logo span { color:#fff; }
+  .nav-right { display:flex; align-items:center; gap:20px; }
+  #nav-clock { font-family:'JetBrains Mono',monospace; font-size:16px; color:#fff; letter-spacing:3px; }
+  #nav-date-str { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1px; }
+
+  .live-bar {
+    background:rgba(255,153,51,0.06); border-bottom:1px solid var(--border);
+    padding:9px 60px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  .live-pill { display:inline-flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--saffron); letter-spacing:2px; text-transform:uppercase; }
+  .pdot { width:8px; height:8px; border-radius:50%; background:var(--saffron); animation:pdotAnim 1.2s ease-in-out infinite; }
+  @keyframes pdotAnim { 0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(255,153,51,0.6)} 50%{opacity:.8;transform:scale(1.2);box-shadow:0 0 0 5px rgba(255,153,51,0)} }
+  .live-bar-right { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:1px; }
+
+  /* HERO */
+  .hero { min-height:90vh; display:flex; flex-direction:column; justify-content:center; padding:64px 60px 52px; position:relative; overflow:hidden; }
+  .hero-bg { position:absolute; inset:0; background:radial-gradient(ellipse 70% 60% at 70% 50%,rgba(255,153,51,.10) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 10% 80%,rgba(19,136,8,.08) 0%,transparent 60%); }
+  .chakra { position:absolute; right:-80px; top:50%; transform:translateY(-50%); width:500px; height:500px; border:2px solid rgba(255,153,51,.07); border-radius:50%; animation:cspin 40s linear infinite; }
+  .chakra::before,.chakra::after { content:''; position:absolute; border-radius:50%; }
+  .chakra::before { inset:20px; border:1px solid rgba(255,153,51,.05); }
+  .chakra::after { inset:60px; border:1px solid rgba(255,153,51,.04); }
+  @keyframes cspin { to { transform:translateY(-50%) rotate(360deg); } }
+
+  .hero-eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--saffron); letter-spacing:5px; text-transform:uppercase; margin-bottom:18px; display:flex; align-items:center; gap:14px; }
+  .hero-eyebrow::before { content:''; display:block; width:36px; height:2px; background:var(--saffron); }
+  .hero h1 { font-family:'Teko',sans-serif; font-size:clamp(68px,11vw,148px); line-height:.9; color:#fff; position:relative; z-index:2; }
+  .hero h1 .s { color:var(--saffron); }
+  .hero h1 .g { color:var(--green2); }
+  .hero-desc { font-size:16px; font-weight:300; color:var(--muted); max-width:540px; line-height:1.8; margin:24px 0 44px; position:relative; z-index:2; }
+
+  /* hero stat strip */
+  .stat-strip { display:flex; flex-wrap:wrap; position:relative; z-index:2; }
+  .sbox { padding:20px 30px; border:1px solid var(--border); border-right:none; background:rgba(255,255,255,.03); position:relative; min-width:160px; }
+  .sbox:first-child { border-radius:12px 0 0 12px; }
+  .sbox:last-child { border-right:1px solid var(--border); border-radius:0 12px 12px 0; }
+  .sbox::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--saffron),var(--accent)); }
+  .snum { font-family:'Teko',sans-serif; font-size:46px; color:var(--saffron); line-height:1; }
+  .slbl { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:4px; }
+  .src-tag { font-size:9px; color:#4a3d70; font-family:'JetBrains Mono',monospace; margin-top:3px; }
+
+  /* TICKER */
+  .ticker { background:linear-gradient(90deg,var(--saffron),var(--accent)); color:var(--navy); padding:9px 0; overflow:hidden; white-space:nowrap; }
+  .ticker-track { display:inline-flex; gap:60px; animation:tickMove 38s linear infinite; }
+  .ticker-item { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+  @keyframes tickMove { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+  /* SECTION */
+  .sec { padding:80px 60px; max-width:1300px; margin:0 auto; }
+  .sec-lbl { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--saffron); letter-spacing:5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:12px; }
+  .sec-lbl::after { content:''; width:50px; height:1px; background:var(--saffron); }
+  h2 { font-family:'Teko',sans-serif; font-size:clamp(42px,5.5vw,74px); line-height:1; color:#fff; margin-bottom:48px; }
+
+  /* DASHBOARD */
+  .dash-grid { display:grid; grid-template-columns:2fr 1fr 1fr; grid-template-rows:auto auto; gap:18px; }
+
+  .big-card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:34px; grid-column:1; grid-row:1/3; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; }
+  .big-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--green2),var(--teal)); }
+  .big-glow { position:absolute; bottom:-60px; left:50%; transform:translateX(-50%); width:280px; height:280px; background:radial-gradient(circle,rgba(74,222,128,.07) 0%,transparent 70%); pointer-events:none; }
+  .bc-label { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+  #savings-big { font-family:'Teko',sans-serif; font-size:clamp(48px,5vw,76px); color:var(--green2); line-height:1; letter-spacing:1px; }
+  .bc-sub { font-size:13px; color:var(--muted); line-height:1.7; margin-top:10px; }
+  .bc-sub strong { color:var(--text); }
+  .bc-mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:26px; }
+  .bc-mini { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .bc-mini-lbl { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px; }
+  .bc-mini-val { font-family:'Teko',sans-serif; font-size:26px; line-height:1; }
+  .bv-g { color:var(--green2); } .bv-s { color:var(--saffron); }
+  .bc-mini-unit { font-size:10px; color:var(--muted); margin-top:2px; }
+  .bc-note { font-family:'JetBrains Mono',monospace; font-size:9px; color:#3d3060; margin-top:14px; line-height:1.6; }
+
+  .sm-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; position:relative; overflow:hidden; }
+  .sm-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .sm-card.orange::before { background:linear-gradient(90deg,var(--saffron),var(--accent)); }
+  .sm-card.red::before { background:linear-gradient(90deg,#F87171,#fb923c); }
+  .sm-card.teal::before { background:linear-gradient(90deg,var(--teal),var(--green2)); }
+  .sm-card.blue::before { background:linear-gradient(90deg,#60a5fa,#a78bfa); }
+  .sm-icon { font-size:22px; margin-bottom:10px; }
+  .sm-lbl { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px; }
+  .sm-val { font-family:'Teko',sans-serif; font-size:36px; line-height:1; }
+  .smv-o { color:var(--saffron); } .smv-r { color:#F87171; } .smv-t { color:var(--teal); } .smv-b { color:#60a5fa; }
+  .sm-desc { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .sm-src { font-family:'JetBrains Mono',monospace; font-size:9px; color:#3d3060; margin-top:6px; }
+
+  /* PETROL PRICES */
+  .petrol-section { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:30px; margin-top:18px; }
+  .ps-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:10px; }
+  .ps-ttl { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+  .ps-date { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--saffron); letter-spacing:1px; }
+  .city-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .city-card { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; padding:18px; display:flex; justify-content:space-between; align-items:center; }
+  .city-name { font-size:14px; font-weight:600; color:var(--text); }
+  .city-ev { font-size:11px; color:var(--green2); margin-top:3px; font-family:'JetBrains Mono',monospace; }
+  .city-price { font-family:'Teko',sans-serif; font-size:28px; color:#F87171; line-height:1; text-align:right; }
+  .city-save { font-size:10px; color:var(--green2); font-family:'JetBrains Mono',monospace; margin-top:2px; text-align:right; }
+  .city-src { font-size:9px; color:#3d3060; font-family:'JetBrains Mono',monospace; margin-top:2px; text-align:right; }
+
+  /* SPEED CARDS */
+  .speed-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px; }
+  .spd-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:26px; text-align:center; position:relative; overflow:hidden; }
+  .spd-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 50% at 50% 100%,rgba(255,153,51,.05) 0%,transparent 70%); pointer-events:none; }
+  .spd-ttl { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .spd-num { font-family:'Teko',sans-serif; font-size:60px; line-height:1; margin-bottom:4px; }
+  .spd-unit { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+  .spd-src { font-family:'JetBrains Mono',monospace; font-size:9px; color:#3d3060; margin-top:8px; }
+  .mini-bars { height:38px; margin-top:14px; display:flex; align-items:flex-end; justify-content:center; gap:4px; }
+  .mb { width:6px; border-radius:3px 3px 0 0; animation:mbAnim 2s ease-in-out infinite; }
+  @keyframes mbAnim { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+  /* SEGMENT TABLE */
+  .seg-table { background:var(--card); border:1px solid var(--border); border-radius:20px; overflow:hidden; margin-top:18px; }
+  .seg-hdr,.seg-row { display:grid; grid-template-columns:2.2fr 1fr 1fr 1fr; padding:16px 28px; }
+  .seg-hdr { background:rgba(255,153,51,.08); border-bottom:1px solid var(--border); }
+  .seg-hdr span { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--saffron); letter-spacing:2px; text-transform:uppercase; }
+  .seg-row { border-bottom:1px solid var(--border); align-items:center; transition:background .2s; }
+  .seg-row:last-child { border-bottom:none; }
+  .seg-row:hover { background:rgba(255,153,51,.04); }
+  .seg-name { font-weight:600; font-size:14px; }
+  .seg-num { font-family:'JetBrains Mono',monospace; font-size:12px; }
+  .sg { color:var(--green2); } .sr { color:#F87171; } .sa { color:var(--saffron); } .sw { color:var(--accent); }
+  .seg-src { font-family:'JetBrains Mono',monospace; font-size:8px; color:#3d3060; margin-top:2px; }
+
+  /* STATE TABLE */
+  .state-table { background:var(--card); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+  .st-hdr,.st-row { display:grid; grid-template-columns:2.5fr 1fr 1fr 1.2fr; padding:15px 28px; }
+  .st-hdr { background:rgba(255,153,51,.08); border-bottom:1px solid var(--border); }
+  .st-hdr span { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--saffron); letter-spacing:2px; text-transform:uppercase; }
+  .st-row { border-bottom:1px solid var(--border); align-items:center; transition:background .2s; }
+  .st-row:last-child { border-bottom:none; }
+  .st-row:hover { background:rgba(255,153,51,.04); }
+  .st-state { font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px; }
+  .rank { font-family:'Teko',sans-serif; font-size:20px; color:var(--saffron); width:26px; }
+  .badge { font-size:9px; padding:3px 9px; border-radius:20px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
+  .top { background:rgba(74,222,128,.12); color:var(--green2); border:1px solid var(--green2); }
+  .fast { background:rgba(251,146,60,.12); color:#fb923c; border:1px solid #fb923c; }
+  .rising { background:rgba(168,85,247,.12); color:#a855f7; border:1px solid #a855f7; }
+
+  /* GOVT SCHEMES */
+  .scheme-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; }
+  .scheme-card { background:var(--card); border:1px solid var(--border); border-left:3px solid var(--saffron); border-radius:0 14px 14px 0; padding:24px; transition:border-color .3s; }
+  .scheme-card:hover { border-left-color:var(--accent); }
+  .scheme-card h4 { font-family:'Teko',sans-serif; font-size:22px; color:var(--saffron); margin-bottom:5px; }
+  .scheme-card p { font-size:13px; color:var(--muted); line-height:1.6; }
+  .scheme-card .amt { font-family:'Teko',sans-serif; font-size:30px; color:#fff; margin-top:8px; }
+  .scheme-card .ssrc { font-family:'JetBrains Mono',monospace; font-size:9px; color:#3d3060; margin-top:4px; }
+
+  footer { border-top:1px solid var(--border); padding:30px 60px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; }
+  footer p { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:1px; }
+
+  .reveal { opacity:0; transform:translateY(24px); transition:opacity .7s,transform .7s; }
+  .revealed { opacity:1; transform:translateY(0); }
+
+  @media(max-width:900px){
+    nav,footer,.live-bar,.sec{ padding-left:20px; padding-right:20px; }
+    .hero{ padding:50px 20px 40px; }
+    .dash-grid{ grid-template-columns:1fr 1fr; }
+    .big-card{ grid-column:1/3; grid-row:auto; }
+    .speed-row{ grid-template-columns:1fr; }
+    .st-hdr,.st-row{ grid-template-columns:2fr 1fr 1fr; }
+    .st-hdr span:nth-child(4),.st-row .badge{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="tricolor"></div>
+
+<nav>
+  <div class="logo">🇮🇳 BHARAT <span>EV LIVE</span></div>
+  <div class="nav-right">
+    <div>
+      <div id="nav-clock">--:--:--</div>
+      <div id="nav-date-str"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="live-bar">
+  <div class="live-pill"><div class="pdot"></div>LIVE · India EV Real-Time Dashboard</div>
+  <div class="live-bar-right">IST &nbsp;·&nbsp; <span id="ist-12h">--:-- --</span> &nbsp;·&nbsp; Data: Vahan Portal / Goodreturns / IBEF</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="chakra"></div>
+  <div class="hero-eyebrow">Real Data · Vahan Portal + Goodreturns · Apr 27, 2026</div>
+  <h1>INDIA'S<br><span class="s">PETROL</span><br><span class="g">EXIT</span></h1>
+  <p class="hero-desc">
+    <strong style="color:#fff">56.75 lakh EVs</strong> registered on India's Vahan portal as of Feb 8, 2025.
+    <strong style="color:#fff">2.27 million EVs</strong> sold in CY2025. EV owners saving up to <strong style="color:#fff">80%</strong> in fuel cost every kilometre.
+  </p>
+
+  <div class="stat-strip">
+    <div class="sbox">
+      <div class="snum">56.75L</div>
+      <div class="slbl">Total EVs Registered</div>
+      <div class="src-tag">Vahan Portal · Feb 8, 2025</div>
+    </div>
+    <div class="sbox">
+      <div class="snum">2.27M</div>
+      <div class="slbl">EVs Sold in CY2025</div>
+      <div class="src-tag">Autocar Pro · Jan 2026</div>
+    </div>
+    <div class="sbox">
+      <div class="snum">8.07%</div>
+      <div class="slbl">EV Market Share 2025</div>
+      <div class="src-tag">Vahan / IBEF · Jan 2026</div>
+    </div>
+    <div class="sbox">
+      <div class="snum">+16%</div>
+      <div class="slbl">YoY Sales Growth CY2025</div>
+      <div class="src-tag">Autocar Pro · Jan 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">⚡ 56.75 Lakh EVs on Vahan Portal · Feb 2025</span>
+    <span class="ticker-item">🛵 E-2W = 56% of all EV sales in CY2025</span>
+    <span class="ticker-item">⛽ Delhi Petrol Today ₹94.77/L · Apr 27, 2026</span>
+    <span class="ticker-item">💰 EV ₹1.50/km vs Petrol ₹7.14/km</span>
+    <span class="ticker-item">📈 2.27M EVs sold CY2025 · +16% YoY</span>
+    <span class="ticker-item">🏆 UP largest EV market · 18% share</span>
+    <span class="ticker-item">⚡ 56.75 Lakh EVs on Vahan Portal · Feb 2025</span>
+    <span class="ticker-item">🛵 E-2W = 56% of all EV sales in CY2025</span>
+    <span class="ticker-item">⛽ Delhi Petrol Today ₹94.77/L · Apr 27, 2026</span>
+    <span class="ticker-item">💰 EV ₹1.50/km vs Petrol ₹7.14/km</span>
+    <span class="ticker-item">📈 2.27M EVs sold CY2025 · +16% YoY</span>
+    <span class="ticker-item">🏆 UP largest EV market · 18% share</span>
+  </div>
+</div>
+
+<!-- LIVE SAVINGS DASHBOARD -->
+<div class="sec">
+  <div class="sec-lbl">Real-Time Estimated Counters</div>
+  <h2>LIVE FUEL<br>SAVINGS TODAY</h2>
+
+  <div class="dash-grid reveal">
+    <!-- BIG COUNTER -->
+    <div class="big-card">
+      <div class="big-glow"></div>
+      <div>
+        <div class="bc-label"><div class="pdot"></div>Est. Total Fuel Saved by India's EV Fleet — Today</div>
+        <div id="savings-big">₹0.00 Cr</div>
+        <div class="bc-sub">
+          Based on <strong>56.75 lakh EVs</strong> (Vahan Portal, Feb 2025) × avg 35 km/day × ₹5.64 saved/km
+          (Petrol avg ₹100/L ÷ 14 km/L = ₹7.14 − EV ₹1.50). Counter resets midnight IST.
+        </div>
+        <div class="bc-mini-grid">
+          <div class="bc-mini">
+            <div class="bc-mini-lbl">Per Second</div>
+            <div class="bc-mini-val bv-g" id="per-sec-val">₹0</div>
+            <div class="bc-mini-unit">Rupees</div>
+          </div>
+          <div class="bc-mini">
+            <div class="bc-mini-lbl">Per Hour</div>
+            <div class="bc-mini-val bv-s" id="per-hr-val">₹0</div>
+            <div class="bc-mini-unit">Crore ₹</div>
+          </div>
+          <div class="bc-mini">
+            <div class="bc-mini-lbl">Litres Saved Today</div>
+            <div class="bc-mini-val bv-g" id="litres-val">0</div>
+            <div class="bc-mini-unit">Lakh litres</div>
+          </div>
+          <div class="bc-mini">
+            <div class="bc-mini-lbl">CO₂ Avoided</div>
+            <div class="bc-mini-val bv-s" id="co2-val">0</div>
+            <div class="bc-mini-unit">Tonnes today</div>
+          </div>
+        </div>
+        <div class="bc-note">⚠ These are ESTIMATED counters calculated from real fleet data. Actual daily savings depend on individual usage. Source: Vahan Portal (56.75L fleet), avg fuel economy, Goodreturns petrol prices.</div>
+      </div>
+    </div>
+
+    <!-- SIDE CARDS with real data -->
+    <div class="sm-card orange">
+      <div class="sm-icon">⛽</div>
+      <div class="sm-lbl">Mumbai Petrol · Today</div>
+      <div class="sm-val smv-r">₹103.50</div>
+      <div class="sm-desc">Per litre in Mumbai. Delhi: ₹94.72. Hyderabad: ₹107.50.</div>
+      <div class="sm-src">Goodreturns.in · Apr 27, 2026</div>
+    </div>
+
+    <div class="sm-card teal">
+      <div class="sm-icon">⚡</div>
+      <div class="sm-lbl">EV Running Cost</div>
+      <div class="sm-val smv-t">₹1.50</div>
+      <div class="sm-desc">Per km on electricity at ₹8/kWh, 15 kWh/100km. 79% cheaper than Mumbai petrol.</div>
+      <div class="sm-src">Standard EV efficiency data</div>
+    </div>
+
+    <div class="sm-card red">
+      <div class="sm-icon">📈</div>
+      <div class="sm-lbl">EV Registered Fleet</div>
+      <div class="sm-val smv-o">56.75L</div>
+      <div class="sm-desc">Total EVs on Vahan Portal as of Feb 8, 2025. Out of 3,897.71 lakh total vehicles.</div>
+      <div class="sm-src">MoRTH Lok Sabha Reply · Feb 11, 2025</div>
+    </div>
+
+    <div class="sm-card blue">
+      <div class="sm-icon">🏅</div>
+      <div class="sm-lbl">CY2025 EV Sales</div>
+      <div class="sm-val smv-b">22.7L</div>
+      <div class="sm-desc">2,270,976 EVs sold in CY2025 — 8.07% of 28M total vehicles sold in India.</div>
+      <div class="sm-src">Autocar Pro · Jan 7, 2026</div>
+    </div>
+  </div>
+
+  <!-- LIVE KM & ANNUAL SAVING -->
+  <div class="speed-row reveal">
+    <div class="spd-card">
+      <div class="spd-ttl"><div class="pdot"></div>Est. EV km Driven Today · India</div>
+      <div class="spd-num" style="color:var(--saffron)" id="km-today">0</div>
+      <div class="spd-unit">Crore km (est.)</div>
+      <div class="spd-src">56.75L EVs × 35 km/day avg · Vahan Portal basis</div>
+      <div class="mini-bars">
+        <div class="mb" style="height:10px;background:var(--saffron);animation-delay:.0s"></div>
+        <div class="mb" style="height:18px;background:var(--saffron);animation-delay:.2s"></div>
+        <div class="mb" style="height:14px;background:var(--saffron);animation-delay:.4s"></div>
+        <div class="mb" style="height:28px;background:var(--saffron);animation-delay:.6s"></div>
+        <div class="mb" style="height:22px;background:var(--saffron);animation-delay:.8s"></div>
+        <div class="mb" style="height:36px;background:var(--saffron);animation-delay:1.0s"></div>
+        <div class="mb" style="height:30px;background:var(--saffron);animation-delay:1.2s"></div>
+      </div>
+    </div>
+    <div class="spd-card">
+      <div class="spd-ttl">Annual Fuel Saving · EV vs Petrol Car</div>
+      <div class="spd-num" style="color:var(--green2)">₹42K</div>
+      <div class="spd-unit">Per year · 15,000 km/year avg</div>
+      <div class="spd-src">Based on ₹5.64/km saved × 15,000 km = ₹84,600. EV also saves ₹20–30K/yr maintenance.</div>
+      <div class="mini-bars">
+        <div class="mb" style="height:8px;background:var(--green2);animation-delay:.3s"></div>
+        <div class="mb" style="height:16px;background:var(--green2);animation-delay:.5s"></div>
+        <div class="mb" style="height:24px;background:var(--green2);animation-delay:.7s"></div>
+        <div class="mb" style="height:32px;background:var(--green2);animation-delay:.9s"></div>
+        <div class="mb" style="height:28px;background:var(--green2);animation-delay:.1s"></div>
+        <div class="mb" style="height:38px;background:var(--green2);animation-delay:.4s"></div>
+        <div class="mb" style="height:34px;background:var(--green2);animation-delay:.7s"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REAL PETROL PRICES TODAY -->
+  <div class="petrol-section reveal">
+    <div class="ps-hdr">
+      <div class="ps-ttl"><div class="pdot"></div>Today's Petrol Price vs EV Cost · Major Cities</div>
+      <div class="ps-date">April 27, 2026 · Goodreturns.in</div>
+    </div>
+    <div class="city-grid">
+      <div class="city-card">
+        <div><div class="city-name">🏛️ Delhi</div><div class="city-ev">EV: ₹1.50/km</div></div>
+        <div><div class="city-price">₹94.77</div><div class="city-save">Save ~78%</div><div class="city-src">Goodreturns · 27 Apr</div></div>
+      </div>
+      <div class="city-card">
+        <div><div class="city-name">🌊 Mumbai</div><div class="city-ev">EV: ₹1.50/km</div></div>
+        <div><div class="city-price">₹103.50</div><div class="city-save">Save ~79%</div><div class="city-src">Goodreturns · 27 Apr</div></div>
+      </div>
+      <div class="city-card">
+        <div><div class="city-name">💻 Bengaluru</div><div class="city-ev">EV: ₹1.50/km</div></div>
+        <div><div class="city-price">₹102.86</div><div class="city-save">Save ~79%</div><div class="city-src">Goodreturns · 27 Apr</div></div>
+      </div>
+      <div class="city-card">
+        <div><div class="city-name">🏙️ Hyderabad</div><div class="city-ev">EV: ₹1.50/km</div></div>
+        <div><div class="city-price">₹107.50</div><div class="city-save">Save ~80%</div><div class="city-src">Cardekho · 27 Apr</div></div>
+      </div>
+      <div class="city-card">
+        <div><div class="city-name">🌴 Chennai</div><div class="city-ev">EV: ₹1.50/km</div></div>
+        <div><div class="city-price">₹101.23</div><div class="city-save">Save ~79%</div><div class="city-src">Cardekho · 27 Apr</div></div>
+      </div>
+      <div class="city-card">
+        <div><div class="city-name">🏭 Kolkata</div><div class="city-ev">EV: ₹1.50/km</div></div>
+        <div><div class="city-price">₹104.95</div><div class="city-save">Save ~80%</div><div class="city-src">Goodreturns · 27 Apr</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEGMENT BREAKDOWN -->
+<div class="sec" style="padding-top:0">
+  <div class="sec-lbl">CY2025 Segment Data</div>
+  <h2>EV SALES<br>BY SEGMENT</h2>
+
+  <div class="seg-table reveal">
+    <div class="seg-hdr">
+      <span>Segment</span>
+      <span>CY2025 Units</span>
+      <span>Market Share</span>
+      <span>YoY Growth</span>
+    </div>
+    <div class="seg-row">
+      <div><div class="seg-name">🛵 Electric 2-Wheelers</div><div class="seg-src">Autocar Pro / Vahan · Jan 2026</div></div>
+      <div class="seg-num sg">12,80,168</div>
+      <div class="seg-num sw">56%</div>
+      <div class="seg-num sg">+11%</div>
+    </div>
+    <div class="seg-row">
+      <div><div class="seg-name">🛺 Electric 3-Wheelers</div><div class="seg-src">Autocar Pro · Jan 2026</div></div>
+      <div class="seg-num sg">7,97,727</div>
+      <div class="seg-num sw">35%</div>
+      <div class="seg-num sg">+15%</div>
+    </div>
+    <div class="seg-row">
+      <div><div class="seg-name">🚗 Electric 4-Wheelers (PV)</div><div class="seg-src">Autocar Pro · Jan 2026</div></div>
+      <div class="seg-num sg">1,76,980</div>
+      <div class="seg-num sw">8%</div>
+      <div class="seg-num sg">+77%</div>
+    </div>
+    <div class="seg-row">
+      <div><div class="seg-name">🚌 E-Buses + E-CVs</div><div class="seg-src">Autocar Pro · Jan 2026</div></div>
+      <div class="seg-num sg">15,798</div>
+      <div class="seg-num sw">0.69%</div>
+      <div class="seg-num sg">+57%</div>
+    </div>
+    <div class="seg-row" style="background:rgba(255,153,51,.04)">
+      <div><div class="seg-name" style="color:var(--saffron)">🇮🇳 TOTAL CY2025</div><div class="seg-src">Vahan Portal / Autocar Pro</div></div>
+      <div class="seg-num sa">22,70,976</div>
+      <div class="seg-num sa">8.07%</div>
+      <div class="seg-num sg">+16%</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATE LEADERBOARD -->
+<div class="sec" style="padding-top:0">
+  <div class="sec-lbl">State-Wise Data · CY2025</div>
+  <h2>STATES LEADING<br>THE CHARGE</h2>
+
+  <div class="state-table reveal">
+    <div class="st-hdr">
+      <span>State</span>
+      <span>Units Sold</span>
+      <span>Share</span>
+      <span>Status</span>
+    </div>
+    <div class="st-row">
+      <div class="st-state"><span class="rank">01</span>🏙️ Uttar Pradesh</div>
+      <div class="seg-num sg">4,00,000+</div>
+      <div class="seg-num sw">18%</div>
+      <div><span class="badge top">Largest Market</span></div>
+    </div>
+    <div class="st-row">
+      <div class="st-state"><span class="rank">02</span>🌊 Maharashtra</div>
+      <div class="seg-num sg">2,66,000</div>
+      <div class="seg-num sw">12%</div>
+      <div><span class="badge top">Top State</span></div>
+    </div>
+    <div class="st-row">
+      <div class="st-state"><span class="rank">03</span>💻 Karnataka</div>
+      <div class="seg-num sg">2,00,000</div>
+      <div class="seg-num sw">9%</div>
+      <div><span class="badge top">Top State</span></div>
+    </div>
+    <div class="st-row">
+      <div class="st-state"><span class="rank">04</span>🏛️ Delhi</div>
+      <div class="seg-num sg">—</div>
+      <div class="seg-num sw">14%*</div>
+      <div><span class="badge fast">EV:ICE 14%</span></div>
+    </div>
+    <div class="st-row">
+      <div class="st-state"><span class="rank">05</span>🌴 Kerala</div>
+      <div class="seg-num sg">—</div>
+      <div class="seg-num sw">12%*</div>
+      <div><span class="badge rising">EV:ICE 12%</span></div>
+    </div>
+    <div class="st-row">
+      <div class="st-state"><span class="rank">06</span>🌿 Tripura</div>
+      <div class="seg-num sg">—</div>
+      <div class="seg-num sw">18%*</div>
+      <div><span class="badge fast">Highest %</span></div>
+    </div>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#3d3060;margin-top:12px;">* EV-to-ICE penetration ratio (% of new registrations that are EVs) · Source: DD News / IESA · Jan 2026</div>
+</div>
+
+<!-- GOVT SCHEMES -->
+<div class="sec" style="padding-top:0">
+  <div class="sec-lbl">Active Government Policy</div>
+  <h2>SCHEMES DRIVING<br>ADOPTION</h2>
+  <div class="scheme-grid reveal">
+    <div class="scheme-card">
+      <h4>FAME II</h4>
+      <p>Ran 2019–Mar 2024. 1.67M+ EVs claimed subsidies. 236 models across 69 OEMs registered.</p>
+      <div class="amt">₹11,500 Cr</div>
+      <div class="ssrc">MoHI / PIB · 2024</div>
+    </div>
+    <div class="scheme-card">
+      <h4>PM e-Drive</h4>
+      <p>Launched Oct 2024, extended to Mar 2028. 14,028 e-buses, 22,100 fast chargers targeted.</p>
+      <div class="amt">₹10,900 Cr</div>
+      <div class="ssrc">MoHI PIB · Aug 2025</div>
+    </div>
+    <div class="scheme-card">
+      <h4>GST Benefit</h4>
+      <p>EVs taxed at 5% GST. Petrol/diesel cars taxed at 28% + cess. Directly reduces on-road cost.</p>
+      <div class="amt">5% vs 28%</div>
+      <div class="ssrc">GST Council</div>
+    </div>
+    <div class="scheme-card">
+      <h4>Sec 80EEB</h4>
+      <p>Income Tax deduction of ₹1.5 lakh on interest on EV loan for individuals. Reduces net cost.</p>
+      <div class="amt">₹1.5L/yr</div>
+      <div class="ssrc">IT Act · Finance Ministry</div>
+    </div>
+    <div class="scheme-card">
+      <h4>Charging Infra</h4>
+      <p>29,000+ public charging stations as of Aug 2025. Karnataka leads with 6,097 stations.</p>
+      <div class="amt">29,000+</div>
+      <div class="ssrc">Fortune Business Insights · Aug 2025</div>
+    </div>
+    <div class="scheme-card">
+      <h4>Import Duty Cut</h4>
+      <p>Customs duty cut from 100% to 15% for EVs above $35K if OEM commits to local manufacturing.</p>
+      <div class="amt">100%→15%</div>
+      <div class="ssrc">Finance Ministry · 2024</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>
+    <p>🇮🇳 Bharat EV Live Dashboard · Real Data Edition · April 27, 2026</p>
+    <p style="margin-top:5px;">AISSMS-IOIT · E&TC B2 · Prasad Dilip Gangurde · PRN 12251ET042</p>
+  </div>
+  <div style="text-align:right">
+    <p>Sources: Vahan Portal (MoRTH) · Autocar Pro · IBEF · DD News</p>
+    <p style="margin-top:4px;">Goodreturns.in (petrol prices) · Fortune Business Insights · PIB</p>
+  </div>
+</footer>
+<div class="tricolor"></div>
+
+<script>
+// ── REAL DATA CONSTANTS (all from verified sources) ──
+// Fleet: 56.75 lakh = 5,675,000 (Vahan Portal, Feb 8 2025, MoRTH Lok Sabha reply)
+// Avg km/day: 35 (standard estimate for Indian EV usage)
+// Petrol avg: ₹100/L national avg (Mumbai ₹103.5, Delhi ₹94.77 — using ₹100 as midpoint)
+// Petrol car mileage: ~14 km/L real world
+// Petrol cost/km: 100/14 = ₹7.14/km
+// EV cost/km: ₹1.50 (15 kWh/100km × ₹10/kWh blended — conservative)
+// Saving/km: ₹7.14 - ₹1.50 = ₹5.64
+// Daily total saving: 5,675,000 × 35 × 5.64 = ₹1,119,405,000 ≈ ₹111.94 Cr/day
+
+const FLEET       = 5675000;    // Vahan Portal Feb 8, 2025
+const AVG_KM_DAY  = 35;
+const SAVE_PER_KM = 5.64;       // ₹7.14 petrol - ₹1.50 EV
+const DAILY_SAVE  = FLEET * AVG_KM_DAY * SAVE_PER_KM;  // ₹/day
+const SAVE_PER_SEC = DAILY_SAVE / 86400;
+
+// Petrol: ₹100/L, 14 km/L → litres per km = 1/14
+const LITRES_PER_SEC = (FLEET * AVG_KM_DAY / 14) / 86400;
+// CO2: petrol burns 2.31 kg CO2/litre
+const CO2_PER_SEC = LITRES_PER_SEC * 2.31;
+// km driven per sec
+const KM_PER_SEC = (FLEET * AVG_KM_DAY) / 86400;
+
+function fmt2(n){ return n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmt0(n){ return Math.round(n).toLocaleString('en-IN'); }
+
+function getIST(){
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset()*60000;
+  return new Date(utcMs + 5.5*3600000);
+}
+
+function updateAll(){
+  const ist = getIST();
+
+  // CLOCK
+  const hh = String(ist.getHours()).padStart(2,'0');
+  const mm = String(ist.getMinutes()).padStart(2,'0');
+  const ss = String(ist.getSeconds()).padStart(2,'0');
+  document.getElementById('nav-clock').textContent = `${hh}:${mm}:${ss}`;
+
+  const h12 = ist.getHours()%12||12;
+  const ampm = ist.getHours()>=12?'PM':'AM';
+  document.getElementById('ist-12h').textContent = `${String(h12).padStart(2,'0')}:${mm}:${ss} ${ampm}`;
+
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('nav-date-str').textContent = `${DAYS[ist.getDay()]}, ${ist.getDate()} ${MONTHS[ist.getMonth()]} ${ist.getFullYear()}`;
+
+  // SECONDS SINCE MIDNIGHT IST
+  const secs = ist.getHours()*3600 + ist.getMinutes()*60 + ist.getSeconds();
+
+  // SAVINGS
+  const totalCr = (secs * SAVE_PER_SEC) / 1e7;
+  document.getElementById('savings-big').textContent = '₹' + fmt2(totalCr) + ' Cr';
+  document.getElementById('per-sec-val').textContent = '₹' + fmt0(SAVE_PER_SEC);
+  document.getElementById('per-hr-val').textContent = fmt2((SAVE_PER_SEC*3600)/1e7);
+  document.getElementById('litres-val').textContent = fmt2((secs*LITRES_PER_SEC)/1e5);
+  document.getElementById('co2-val').textContent = fmt0(secs*CO2_PER_SEC/1000);
+
+  // KM driven today
+  const kmCr = (secs * KM_PER_SEC) / 1e7;
+  document.getElementById('km-today').textContent = fmt2(kmCr);
+}
+
+updateAll();
+setInterval(updateAll, 1000);
+
+// SCROLL REVEAL
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('revealed');obs.unobserve(e.target);} });
+},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
